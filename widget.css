@@ -1,0 +1,105 @@
+/* widget.css - Liquid Glass Telegram-style (final) */
+/* Variables */
+:root{
+  --tg-bg-main:#0e1621;
+  --tg-bg-gradient:linear-gradient(180deg,#0e1621 0%,#17212b 100%);
+  --tg-text:#e6eef8;
+  --tg-muted:#9aa7bd;
+  --tg-header-bg:#17212b;
+  --tg-header-height:56px;
+  --tg-avatar-size:36px;
+  --tg-title-font:15px;
+  --tg-meta-font:12px;
+  --tg-bubble-in:#182533;
+  --tg-bubble-out:#2b5278;
+  --tg-input-height:44px;
+  --tg-input-radius:22px;
+  --tg-input-bg:rgba(23,33,43,0.55);
+  --tg-input-field:#0e1621;
+  --tg-accent:#2ea6ff;
+  --tg-icon-size:20px;
+  --tg-gap:10px;
+  --gold:#ffd166;
+}
+
+/* base */
+*{box-sizing:border-box}
+html,body{height:100dvh;margin:0;color:var(--tg-text);background:var(--tg-bg-gradient);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial}
+.hidden{display:none!important}
+
+/* app layout */
+#tg-comments-app{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+
+/* header */
+.tg-header{display:flex;align-items:center;justify-content:space-between;height:var(--tg-header-height);padding:0 14px;background:var(--tg-header-bg);position:sticky;top:0;z-index:60}
+.tg-back-btn,.tg-options-btn{width:40px;height:40px;border:none;background:none;display:flex;align-items:center;justify-content:center;color:var(--tg-text);font-size:var(--tg-icon-size);cursor:pointer}
+.tg-header-center{display:flex;align-items:center;gap:var(--tg-gap);flex:1;margin:0 12px;min-width:0}
+.tg-header-avatar{width:var(--tg-avatar-size);height:var(--tg-avatar-size);border-radius:50%;object-fit:cover;flex-shrink:0}
+.tg-header-info{display:flex;flex-direction:column;justify-content:center;min-width:0}
+.tg-title{font-size:var(--tg-title-font);font-weight:700;line-height:1.2;color:var(--tg-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tg-meta{font-size:var(--tg-meta-font);color:var(--tg-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .22s}
+
+/* pin banner */
+.tg-pin-banner{display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(23,33,43,0.55);backdrop-filter:blur(8px);border-radius:20px;color:var(--tg-text);font-size:13px;position:sticky;top:calc(var(--tg-header-height) + 8px);z-index:55;box-shadow:0 10px 30px rgba(0,0,0,0.35);max-width:88%;margin:10px auto;transform:translateY(-8px);opacity:0;transition:all 320ms cubic-bezier(.2,.9,.3,1)}
+.tg-pin-banner.show{transform:translateY(0);opacity:1}
+.tg-pin-banner img{width:36px;height:36px;border-radius:8px;object-fit:cover}
+.tg-pin-banner .pin-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tg-pin-banner .contact-admin-btn{height:36px;border-radius:18px;padding:6px 12px;background:var(--tg-accent);color:#fff;border:none;cursor:pointer}
+
+/* comments container */
+.tg-comments-container{flex:1 1 auto;padding:12px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.tg-comments-container::after{content:"";display:block;height:calc(var(--tg-input-height) + 16px)}
+
+/* date sticker */
+.tg-date-sticker{display:inline-block;background:rgba(255,255,255,0.03);padding:6px 12px;border-radius:16px;font-size:12px;color:var(--tg-muted);margin:12px auto;display:block;width:max-content}
+
+/* bubble */
+.tg-bubble{display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;max-width:75%;transition:transform .22s,opacity .22s}
+.tg-bubble.incoming{justify-content:flex-start}
+.tg-bubble.outgoing{flex-direction:row-reverse;margin-left:auto}
+.tg-bubble.pinned{box-shadow:0 0 0 2px rgba(255,209,102,0.06)}
+.tg-bubble-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-top:2px}
+.tg-bubble-content{padding:8px 12px;border-radius:14px;font-size:14px;line-height:1.4;word-break:break-word;position:relative;max-width:100%}
+.tg-bubble.incoming .tg-bubble-content{background:var(--tg-bubble-in)}
+.tg-bubble.outgoing .tg-bubble-content{background:var(--tg-bubble-out)}
+.tg-bubble-sender{font-size:13px;font-weight:600;margin-bottom:6px;color:var(--tg-text)}
+.tg-bubble-text{white-space:pre-wrap}
+.tg-bubble-meta{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;color:var(--tg-muted)}
+.tg-bubble-meta .seen{display:flex;align-items:center;gap:4px}
+
+/* gold highlight for clicked/scrolled message */
+.tg-highlight{outline:2px solid var(--gold);box-shadow:0 8px 24px rgba(255,209,102,0.06);animation:highlightFade 2600ms ease forwards}
+@keyframes highlightFade{0%{opacity:1}80%{opacity:1}100%{opacity:0.15;box-shadow:none;outline:0}}
+
+/* reply preview */
+.tg-reply-preview{background:rgba(255,255,255,0.02);padding:6px 8px;border-left:3px solid rgba(255,255,255,0.04);border-radius:8px;margin-bottom:8px;font-size:12px;color:var(--tg-muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+
+/* small image in bubble */
+.tg-bubble-image{display:block;max-width:280px;border-radius:12px;margin-bottom:8px;object-fit:cover}
+
+/* reactions */
+.tg-reactions{display:flex;gap:6px;margin-top:6px;font-size:13px}
+.tg-reaction{display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:16px;background:rgba(255,255,255,0.03)}
+
+/* input */
+.tg-input-wrapper{padding:8px 12px;background:transparent;position:sticky;bottom:8px;z-index:60;display:flex;justify-content:center}
+.tg-input-bar{display:flex;align-items:center;gap:8px;width:100%;max-width:600px;height:var(--tg-input-height);border-radius:var(--tg-input-radius);background:var(--tg-input-bg);padding:0 12px;box-shadow:0 10px 30px rgba(0,0,0,0.25)}
+.tg-input-bar.glass{backdrop-filter:blur(8px)}
+.tg-comment-input{flex:1;height:100%;border-radius:var(--tg-input-radius);border:none;padding:0 12px;background:transparent;color:var(--tg-text);font-size:14px;outline:none}
+.tg-comment-input::placeholder{color:var(--tg-muted)}
+.tg-send-btn{width:36px;height:36px;border-radius:50%;background:var(--tg-accent);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.tg-icon-btn{background:none;border:none;padding:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--tg-muted)}
+
+/* jump indicator */
+#tg-jump-indicator{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tg-input-height) + 64px);background:var(--tg-accent);color:#fff;padding:6px 12px;border-radius:18px;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(0,0,0,.12);z-index:999}
+#tg-jump-indicator.hidden{display:none}
+
+/* responsive */
+@media (max-width:520px){
+  :root{--tg-avatar-size:34px}
+  .tg-header{padding:0 10px}
+  .tg-header-center{gap:8px;margin:0 8px}
+  .tg-bubble{max-width:85%;margin:6px 10px}
+  #tg-jump-indicator{bottom:calc(var(--tg-input-height) + 56px);padding:5px 10px}
+  .tg-input-bar{max-width:100%}
+}
