@@ -1,39 +1,88 @@
-// interactions.js - input handling, send event, Contact Admin hooks, context auto-reply
-document.addEventListener("DOMContentLoaded", ()=> {
-  const input = document.getElementById("tg-comment-input");
-  const sendBtn = document.getElementById("tg-send-btn");
-  const emojiBtn = document.getElementById("tg-emoji-btn");
-  const cameraBtn = document.getElementById("tg-camera-btn");
-  const contactAdminLink = window.CONTACT_ADMIN_LINK || "https://t.me/your_admin";
-  const metaLine = document.getElementById("tg-meta-line");
+// interactions.js
+// Handles user input, send logic, admin contact button, pin & reply logic
 
-  if(metaLine) metaLine.textContent = `${(window.MEMBER_COUNT||1284).toLocaleString()} members, ${window.ONLINE_COUNT||128} online`;
+(function () {
 
-  function toggleSendButton(){
-    const hasText = input.value.trim().length > 0;
-    if(hasText){ sendBtn.classList.remove("hidden"); emojiBtn.classList.add("hidden"); cameraBtn.classList.add("hidden"); } else { sendBtn.classList.add("hidden"); emojiBtn.classList.remove("hidden"); cameraBtn.classList.remove("hidden"); }
+  const input = document.getElementById("messageInput");
+  const sendBtn = document.getElementById("sendBtn");
+  const chatContainer = document.getElementById("chatContainer");
+  const contactBtn = document.getElementById("contactAdminBtn");
+
+  if (!chatContainer) {
+    console.error("Chat container missing.");
+    return;
   }
-  input.addEventListener("input", toggleSendButton);
 
-  function doSendMessage(){
-    const text = input.value.trim(); if(!text) return;
-    const ev = new CustomEvent("sendMessage", { detail: { text }});
-    document.dispatchEvent(ev); input.value = ""; toggleSendButton();
+  let messageCounter = 0;
+
+  function generateId() {
+    return "msg_" + Date.now() + "_" + (messageCounter++);
   }
-  sendBtn.addEventListener("click", doSendMessage);
-  input.addEventListener("keydown", (e)=>{ if(e.key === "Enter"){ e.preventDefault(); doSendMessage(); } });
 
-  document.addEventListener("click", (e) => {
-    const target = e.target.closest && e.target.closest(".contact-admin-btn");
-    if(target){ const href = target.dataset.href || contactAdminLink; window.open(href, "_blank"); e.preventDefault(); }
-  });
+  function getCurrentTime() {
+    const now = new Date();
+    return now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
 
-  document.addEventListener("messageContext", (ev)=> {
-    const info = ev.detail; const persona = window.identity ? window.identity.getRandomPersona() : { name:"User", avatar:"https://ui-avatars.com/api/?name=U" };
-    setTimeout(()=> {
-      const replyText = window.identity ? window.identity.generateHumanComment(persona, "Nice point!") : "Nice!";
-      const replyEv = new CustomEvent("autoReply", { detail: { parentText: info.text, persona, text: replyText } });
-      document.dispatchEvent(replyEv);
-    }, 800 + Math.random()*1200);
-  });
-});
+  function sendUserMessage(text) {
+    if (!text || text.trim() === "") return;
+
+    const message = {
+      id: generateId(),
+      name: "You",
+      text: text.trim(),
+      time: getCurrentTime(),
+      isOwn: true,
+      isAdmin: false,
+      avatar: null,
+      reactions: {}
+    };
+
+    window.BubbleRenderer.renderMessages([message]);
+
+    // Notify realism engine
+    if (window.RealismEngine && typeof window.RealismEngine.onUserMessage === "function") {
+      window.RealismEngine.onUserMessage(message);
+    }
+
+    if (input) input.value = "";
+  }
+
+  function handleSend() {
+    if (!input) return;
+    sendUserMessage(input.value);
+  }
+
+  if (sendBtn) {
+    sendBtn.addEventListener("click", handleSend);
+  }
+
+  if (input) {
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleSend();
+      }
+    });
+  }
+
+  // Admin contact button
+  if (contactBtn) {
+    contactBtn.addEventListener("click", function () {
+      window.open("https://t.me/ph_suppp", "_blank");
+    });
+  }
+
+  // Optional: pin scroll safety
+  function scrollToMessage(id) {
+    const el = document.querySelector(`[data-id="${id}"]`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  window.Interactions = {
+    sendUserMessage,
+    scrollToMessage
+  };
+
+})();
