@@ -5,20 +5,27 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Abrox – Profit Hunters Chat (Realism)</title>
 
+  <!-- Main styles (must exist) -->
   <link rel="stylesheet" href="widget.css" />
 
   <style>
-    html,body{height:100dvh;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; -webkit-font-smoothing:antialiased;}
+    html,body{height:100dvh;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;-webkit-font-smoothing:antialiased;}
     .hidden{display:none!important;}
   </style>
 
-  <!-- Runtime config BEFORE modules load -->
+  <!--
+    Runtime config (must be set BEFORE modules load).
+    IMPORTANT: upload these assets to your repo EXACTLY (case-sensitive):
+      - assets/logo.jpg        <-- site header logo (REQUIRED)
+      - assets/admin.jpg       <-- admin avatar (REQUIRED)
+      - assets/broadcast.jpg   <-- admin broadcast image (REQUIRED)
+  -->
   <script>
     window.CONTACT_ADMIN_LINK = "https://t.me/ph_suppp";
     window.MEMBER_COUNT = 1284;
     window.ONLINE_COUNT = 128;
 
-    // Large pool defaults (adjust down if running low memory)
+    // Large pool defaults. For DEBUG use smaller numbers (TOTAL_PERSONAS: 200, INITIAL_POOL: 200).
     window.REALISM_CONFIG = {
       TOTAL_PERSONAS: 5000,
       INITIAL_POOL: 1500,
@@ -38,7 +45,7 @@
       welcomeMessage: "Welcome! Please use Contact Admin to verify."
     };
 
-    // Optional: provide your hosted avatar URLs for highest realism:
+    // Optional: Provide hosted avatar URLs for higher realism.
     // window.UPLOADED_AVATARS = ["https://cdn.yoursite.com/ava1.jpg", ...];
   </script>
 </head>
@@ -50,7 +57,8 @@
       <button id="tg-back" class="tg-back-btn" aria-label="Back"><i data-lucide="arrow-left"></i></button>
 
       <div class="tg-header-center">
-        <img src="assets/admin.jpg" alt="Profit Hunters Logo" class="tg-header-avatar" />
+        <!-- FIXED: logo should load from assets/logo.jpg (not admin avatar) -->
+        <img src="assets/logo.jpg" alt="Profit Hunters Logo" class="tg-header-avatar" />
         <div class="tg-header-info">
           <div class="tg-title">🌐 Profit Hunters Chat</div>
           <div class="tg-meta" id="tg-meta-line">1,284 members, 128 online</div>
@@ -60,16 +68,19 @@
       <button id="tg-options" class="tg-options-btn" aria-label="Options"><i data-lucide="more-vertical"></i></button>
     </header>
 
-    <!-- Pin banner container -->
+    <!-- Pinned message banner area (app will populate) -->
     <div id="tg-pin-banner" class="tg-pin-banner hidden" role="region" aria-live="polite"></div>
 
-    <!-- Comments -->
+    <!-- Chat container (renderer appends bubbles here) -->
     <main id="tg-comments-container" class="tg-comments-container" role="feed" aria-live="off"></main>
 
-    <!-- Jump indicator -->
-    <div id="tg-jump-indicator" class="hidden" aria-hidden="true"><i data-lucide="chevron-down"></i><span id="tg-jump-text">New messages</span></div>
+    <!-- New messages jump pill -->
+    <div id="tg-jump-indicator" class="hidden" aria-hidden="true">
+      <i data-lucide="chevron-down"></i>
+      <span id="tg-jump-text">New messages</span>
+    </div>
 
-    <!-- Input -->
+    <!-- Floating input pill -->
     <div class="tg-input-wrapper" role="form" aria-label="Send a message">
       <div class="tg-input-bar glass">
         <button id="tg-emoji-btn" class="tg-icon-btn" aria-label="Emoji"><i data-lucide="smile"></i></button>
@@ -81,10 +92,10 @@
 
   </div>
 
-  <!-- Icons -->
+  <!-- Icons (must be loaded BEFORE modules so they can render icons) -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Core scripts: correct load order -->
+  <!-- Module scripts (order is critical) -->
   <script src="identity-personas.js"></script>
   <script src="bubble-renderer.js"></script>
   <script src="realism-engine-v11.js"></script>
@@ -92,6 +103,7 @@
   <script src="app.js"></script>
   <script src="joiner-simulator.js"></script>
 
+  <!-- Ensure icons are created/updated after modules render icon nodes -->
   <script>lucide.createIcons();</script>
 </body>
 </html>
