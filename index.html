@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Abrox – Profit Hunters Chat (Realism)</title>
+
+  <link rel="stylesheet" href="widget.css" />
+
+  <style>
+    html,body{height:100dvh;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; -webkit-font-smoothing:antialiased;}
+    .hidden{display:none!important;}
+  </style>
+
+  <!-- Runtime config BEFORE modules load -->
+  <script>
+    window.CONTACT_ADMIN_LINK = "https://t.me/ph_suppp";
+    window.MEMBER_COUNT = 1284;
+    window.ONLINE_COUNT = 128;
+
+    // Large pool defaults (adjust down if running low memory)
+    window.REALISM_CONFIG = {
+      TOTAL_PERSONAS: 5000,
+      INITIAL_POOL: 1500,
+      POOL_MIN: 1200,
+      POOL_MAX: 5000,
+      DEDUP_LIMIT: 200000,
+      MIN_INTERVAL_MS: 20000,
+      MAX_INTERVAL_MS: 60000,
+      REACTION_TICK_MS: 30000,
+      TREND_SPIKE_PROB: 0.02
+    };
+
+    window.JOINER_CONFIG = {
+      minIntervalMs: 1000*60*60*6,
+      maxIntervalMs: 1000*60*60*24,
+      initialJoins: 3,
+      welcomeMessage: "Welcome! Please use Contact Admin to verify."
+    };
+
+    // Optional: provide your hosted avatar URLs for highest realism:
+    // window.UPLOADED_AVATARS = ["https://cdn.yoursite.com/ava1.jpg", ...];
+  </script>
+</head>
+<body>
+  <div id="tg-comments-app">
+
+    <!-- Header -->
+    <header class="tg-header" role="banner">
+      <button id="tg-back" class="tg-back-btn" aria-label="Back"><i data-lucide="arrow-left"></i></button>
+
+      <div class="tg-header-center">
+        <img src="assets/admin.jpg" alt="Profit Hunters Logo" class="tg-header-avatar" />
+        <div class="tg-header-info">
+          <div class="tg-title">🌐 Profit Hunters Chat</div>
+          <div class="tg-meta" id="tg-meta-line">1,284 members, 128 online</div>
+        </div>
+      </div>
+
+      <button id="tg-options" class="tg-options-btn" aria-label="Options"><i data-lucide="more-vertical"></i></button>
+    </header>
+
+    <!-- Pin banner container -->
+    <div id="tg-pin-banner" class="tg-pin-banner hidden" role="region" aria-live="polite"></div>
+
+    <!-- Comments -->
+    <main id="tg-comments-container" class="tg-comments-container" role="feed" aria-live="off"></main>
+
+    <!-- Jump indicator -->
+    <div id="tg-jump-indicator" class="hidden" aria-hidden="true"><i data-lucide="chevron-down"></i><span id="tg-jump-text">New messages</span></div>
+
+    <!-- Input -->
+    <div class="tg-input-wrapper" role="form" aria-label="Send a message">
+      <div class="tg-input-bar glass">
+        <button id="tg-emoji-btn" class="tg-icon-btn" aria-label="Emoji"><i data-lucide="smile"></i></button>
+        <input type="text" id="tg-comment-input" class="tg-comment-input" placeholder="Message…" autocomplete="off" />
+        <button id="tg-camera-btn" class="tg-icon-btn" aria-label="Camera"><i data-lucide="camera"></i></button>
+        <button id="tg-send-btn" class="tg-send-btn hidden" aria-label="Send message"><i data-lucide="send"></i></button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Core scripts: correct load order -->
+  <script src="identity-personas.js"></script>
+  <script src="bubble-renderer.js"></script>
+  <script src="realism-engine-v11.js"></script>
+  <script src="interactions.js"></script>
+  <script src="app.js"></script>
+  <script src="joiner-simulator.js"></script>
+
+  <script>lucide.createIcons();</script>
+</body>
+</html>
