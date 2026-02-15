@@ -1,6 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+(function runSanityCheck(){
+  const report = { time: new Date().toISOString(), checks: {}, actions: [], notes: [] };
+
+  // Helper
+  function safeJSONParse(s){
+    try { return { ok: true, val: JSON.parse(s) }; } catch(e){ return { ok: false, err: String(e) }; }
+  }
+
+  // 1) DOM elements
+  const domIds = ["tg-comments-container","tg-comment-input","tg-send-btn","tg-pin-banner","tg-jump-indicator","tg-meta-line"];
+  report.checks.dom = {};
+  domIds.forEach(id=>{
+    const el = document.getElementById(id);
+    report.checks.dom[id] = !!el;
+  });
+
+  // 2) Script tags loaded
+  try {
+    report.checks.scripts = Array.from(document.querySelectorAll('script[src]')).map(s=>s.getAttribute('src'));
+  } catch(e){ report.checks.scripts = { error: String(e) }; }
+
+  // 3) Globals & API surface
+  const globals = {
+    identity: !!window.identity,
+    realism: !!window.realism,
+    TGRenderer: !!window.TGRenderer,
+    BubbleRenderer: !!window.BubbleRenderer
+  };
+  report.checks.globals = globals;
+
+  // Check functions
+  report.checks.apis = {
+    TGRenderer_appendMessage: !!(window.TGRenderer && typeof window.TGRenderer.appendMessage === "function"),
+    TGRenderer_showTyping: !!(window.TGRenderer && typeof window.TGRenderer.showTyping === "function"),
+    realism_postFromPoolV11: !!(window.realism && typeof window.realism.postFromPoolV11 === "function"),
+    realism_simulateRandomCrowdV11: !!(window.realism && typeof window.realism.simulateRandomCrowdV11 === "function"),
+    identity_getRandomPersona: !!(window.identity && typeof window.identity.getRandomPersona === "function")
+  };
+
+  // 4) Assets existence (async checks but we collect logs)
+  report.checks.assets = {};
+  const assets = ["assets/logo.jpg","assets/admin.jpg","assets/broadcast.jpg"];
+  assets.forEach(u=>{
+    const img = new Image();
+    img.onload = ()=> { console.log("[asset] OK", u); };
+    img.onerror = ()=> { console.warn("[asset] MISSING/404", u); };
+    img.src = u + "?_t=" + Date.now();
+    report.checks.assets[u] = "requested";
+  });
+
+  // 5) localStorage state sanity
+  try {
+    const rs = localStorage.getItem("abrox_realism_state_v1");
+    const us = localStorage.getItem("abrox_used_avatars_v1");
+    report.checks.localStorage = {
+      abrox_realism_state_v1: rs ? (safeJSONParse(rs).ok ? "ok" : ("parse_error: "+safeJSONParse(rs).err)) : "missing",
+      abrox_used_avatars_v1: us ? (safeJSONParse(us).ok ? "ok" : ("parse_error: "+safeJSONParse(us).err)) : "missing"
+    };
+  } catch(e){ report.checks.localStorage = { error: String(e) }; }
+
+  // 6) Bubble count in DOM
+  try { report.checks.domBubbleCount = document.querySelectorAll(".tg-bubble").length; } catch(e){ report.checks.domBubbleCount = "error: "+String(e); }
+
+  // 7) MESSAGE_STATS size if realism exposed
+  try {
+    report.checks.messageStatsSize = window.realism && window.realism.MESSAGE_STATS ? (window.realism.MESSAGE_STATS.size || 0) : "no MESSAGE_STATS";
+  } catch(e){ report.checks.messageStatsSize = "error: "+String(e); }
+
+  // 8) SyntheticPool length (identity)
+  try { report.checks.syntheticPoolLen = window.identity && Array.isArray(window.identity.SyntheticPool) ? window.identity.SyntheticPool.length : "no pool"; } catch(e){ report.checks.syntheticPoolLen = "error: "+String(e); }
+
+  // 9) Quick small smoke post (safe): if TGRenderer exists, post one tiny test bubble
+  report.actions.smokePost = "skipped";
+  try {
+    if(window.TGRenderer && typeof window.TGRenderer.appendMessage === "function"){
+      const persona = (window.identity && window.identity.Admin) ? window.identity.Admin : { name:"DevTester", avatar:"assets/admin.jpg" };
+      const id = window.TGRenderer.appendMessage(persona, "🧪 sanity-smoke test: " + new Date().toLocaleTimeString(), { timestamp: new Date(), type: "incoming" });
+      report.actions.smokePost = id ? ("posted id: " + id) : "appendMessage returned falsy";
+    } else if(window.BubbleRenderer && typeof window.BubbleRenderer.renderMessages === "function"){
+      window.BubbleRenderer.renderMessages([{ id:"dbg_"+Date.now(), name:"DevTester", text:"🧪 sanity-smoke (fallback)", time:new Date().toLocaleTimeString(), isOwn:false }]);
+      report.actions.smokePost = "posted via BubbleRenderer.renderMessages";
+    } else {
+      report.actions.smokePost = "no renderer available (TGRenderer/BubbleRenderer missing)";
+    }
+  } catch(e){ report.actions.smokePost = "error: "+String(e); }
+
+  // 10) Auto-shim: if BubbleRenderer exists but TGRenderer missing, create shim
+  if(window.BubbleRenderer && !window.TGRenderer){
+    try{
+      window.TGRenderer = {
+        appendMessage: function(persona, text, opts){ 
+          // map to BubbleRenderer.renderMessages
+          try {
+            const msg = { id: opts && opts.id ? opts.id : ("auto_"+Date.now()), name: persona && persona.name ? persona.name : "User", text: text, time: (opts && opts.timestamp) ? (new Date(opts.timestamp)).toLocaleTimeString() : new Date().toLocaleTimeString(), isOwn: (opts && opts.type==="outgoing") };
+            window.BubbleRenderer.renderMessages([msg]);
+            return msg.id;
+          } catch(e){ console.warn("TGRenderer shim appendMessage failed", e); return null; }
+        },
+        showTyping: function(persona, duration){ 
+          try {
+            // show a simple typing bubble for persona for 'duration' ms then remove
+            const el = document.createElement("div"); el.className="tg-bubble incoming typing"; el.innerHTML=`<img class="tg-bubble-avatar" src="${persona && persona.avatar?persona.avatar:'assets/admin.jpg'}" /><div class="tg-bubble-content"><div class="tg-reply-preview">${persona && persona.name?persona.name:'Someone'} is typing…</div></div>`;
+            const c = document.getElementById("tg-comments-container"); if(c) c.appendChild(el), c.scrollTop = c.scrollHeight;
+            setTimeout(()=>{ if(el && el.parentNode) el.parentNode.removeChild(el); }, duration||1500);
+          } catch(e){ console.warn("TGRenderer shim showTyping failed", e); }
+        }
+      };
+      report.actions.autoshim = "TGRenderer shim created from BubbleRenderer";
+    } catch(e){ report.actions.autoshim = "shim failed: "+String(e); }
+  } else {
+    report.actions.autoshim = "not needed";
+  }
+
+  // 11) If realism missing but TGRenderer present, attempt to trigger a pool post if ensurePoolV11 exists
+  if(window.realism && typeof window.realism.postFromPoolV11 === "function"){
+    // do nothing now (avoid spamming). user can trigger manually.
+    report.actions.realismReady = "ok";
+  } else if(!window.realism){
+    report.actions.realismReady = "window.realism missing";
+  } else {
+    report.actions.realismReady = "realism present but postFromPoolV11 not found";
+  }
+
+  // Print summary nicely
+  console.groupCollapsed("Sanity Check Report (" + report.time + ")");
+  console.table(report.checks.dom);
+  console.log("scripts loaded:", report.checks.scripts);
+  console.log("globals:", report.checks.globals);
+  console.log("api surface checks:", report.checks.apis);
+  console.log("localStorage check:", report.checks.localStorage);
+  console.log("dom bubble count:", report.checks.domBubbleCount);
+  console.log("MESSAGE_STATS size:", report.checks.messageStatsSize);
+  console.log("SyntheticPool len:", report.checks.syntheticPoolLen);
+  console.log("actions:", report.actions);
+  if(report.actions.smokePost) console.log("smokePost:", report.actions.smokePost);
+  console.groupEnd();
+
+  // Also return the report object for easy copy/paste
+  return report;
+})();
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Abrox – Profit Hunters Chat (Realism)</title>
